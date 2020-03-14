@@ -106,7 +106,16 @@
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">void rioRcvHandler(void)</span><br><span class="line">&#123;</span><br><span class="line">    static int freq &#x3D; sysClkRateGet();</span><br><span class="line">    static int now &#x3D; tickGet();</span><br><span class="line">    int d &#x3D; tickGet() - now;</span><br><span class="line">    now +&#x3D; d;</span><br><span class="line"></span><br><span class="line">    logMsg((char*)&quot;%s recv data(d&#x3D;%dticks&#x3D;%dms, now&#x3D;%dticks.)\n&quot;, \</span><br><span class="line">        (int)__FUNCTION__, d, d*1000&#x2F;freq, now);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>因为调试过程中发现该函数经常在同一个tick时刻连续收到完全相同的两包数据，故加上了以上代码检测函数被调用频率。 sysClkRateGet只调用一次计算系统时钟频率。前后两次tickGet()的差值换算成时间单位ms。给静态变量赋一次初值，这是C++程序很常用的语法，编译通过，上周五也能正常运行。为何过了一晚上就会莫名造成系统重启。后经排查发现程序运行的目标板由A厂家的PPC换成B厂家的PPC。也就是说其实应用程序本身没有问题，而是目标板也就是系统驱动造成的？可为何将以上打时间stamp的语句注释掉后问题就消失了？</p>
 <p>经过咨询B厂家的驱动开发负责人，了解到A厂家的驱动是在task context中调用的应用程序回调函数，而B厂家的驱动则是在interrupt context中调用应用程序回调函数。这样问题就简单一些了。也就是说本应用中的回调函数在中断服务上下文中会造成系统重启。换句话说以上代码在中断上下文中不符合规范。</p>
-<p>后来翻阅VxWorks的手册，关于编写中断服务函数及中断服务函数的限制，有这么一段：<br><img src="NoBlockingRoutines.png" alt=""><br><img src="C++CodeLimitations.png" alt=""><br>也就是说，由于VxWorks的中断服务程序并不在任务上下文环境运行，即所有中断服务函数共享一个stack空间，因此中断服务函数的一个基本限制就是其不能调用可能导致中断函数阻塞的函数。例如，不能在ISRs中take信号量。</p>
+<p>后来翻阅VxWorks的手册，关于编写中断服务函数及中断服务函数的限制，有这么一段：<br><img src="/2020/03/12/keyword-static/keyword-static/girl.jpg" alt></p>
+ 
+
+
+<p><img src="/2020/03/12/keyword-static/keyword-static/NoBlockingRoutines.jpg" alt><br><img src="/2020/03/12/keyword-static/keyword-static/C++CodeLimitations.jpg" alt></p>
+<img src="/2020/03/12/keyword-static/keyword-static/NoBlockingRoutines.jpg">
+<img src="/2020/03/12/keyword-static/keyword-static/C++CodeLimitations.jpg">
+
+
+<p>也就是说，由于VxWorks的中断服务程序并不在任务上下文环境运行，即所有中断服务函数共享一个stack空间，因此中断服务函数的一个基本限制就是其不能调用可能导致中断函数阻塞的函数。例如，不能在ISRs中take信号量。</p>
 <p>同时由于malloc()和free()函数都要take信号量，因此也不能在ISRs中被直接或间接调用。同样，也不能在ISRs中创建或删除任何的C++对象了，因为C++对象的构造和析构函数。</p>
 <p>故C++代码有以下一些限制：</p>
 <ul>
@@ -122,12 +131,16 @@
 <p>会导致系统重启，而</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">void ISR3(void)</span><br><span class="line">&#123;</span><br><span class="line">    static int n &#x3D; 0;  &#x2F;&#x2F; 1,2,3,4,..., any const number is OK</span><br><span class="line">    n &#x3D; func();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>则不会产生任何问题。也就是说 <code>static int n = func();</code>中<code>n</code>的内存分配发生在运行时刻，而<code>static int n = 0;//1,2,3,...</code>则可能是在编译阶段就已经分配好空间。</p>
+<p>为了证明以上猜想，使用带构造函数和不带构造函数的简单结构体静态变量进行测试：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">typedef struct _tagTest</span><br><span class="line">&#123;</span><br><span class="line">    _tagTest()</span><br><span class="line">    &#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    int a;</span><br><span class="line">    int b;</span><br><span class="line">&#125;ST_TEST;</span><br><span class="line"></span><br><span class="line">void ISR4(void)</span><br><span class="line">&#123;</span><br><span class="line">    static ST_TEST test;</span><br><span class="line">    ...</span><br><span class="line">    test.a &#x3D; 3;</span><br><span class="line">    ... </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>以上代码仍会导致系统重启，而去掉构造函数则程序可以正常运行。至少也证实了手册中说的不能在ISR中使用C++对象。</p>
+<h2 id="ToDo"><a href="#ToDo" class="headerlink" title="ToDo"></a>ToDo</h2><p>想要证明<code>static int n = func();</code>在ISR中何时<code>n</code>进行的内存分配，仍需要更进一步的证据…</p>
 <p><a href="https://zhuanlan.zhihu.com/p/109382792" target="_blank" rel="noopener">O_O</a><br><a href="https://zhuanlan.zhihu.com/p/26625249" target="_blank" rel="noopener">^_^</a></p>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://qinglanyu.github.io/2020/03/12/keyword-static/keyword-static/" data-id="ck7rktta20000nku7fg8pgckw" class="article-share-link">Share</a>
+      <a data-url="http://qinglanyu.github.io/2020/03/12/keyword-static/keyword-static/" data-id="ck7rpgsdq000125u782zdeagq" class="article-share-link">Share</a>
       
       
     </footer>
@@ -176,7 +189,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://qinglanyu.github.io/2020/03/12/hello-world/" data-id="ck7ox3d7a00000hu7aike9d5t" class="article-share-link">Share</a>
+      <a data-url="http://qinglanyu.github.io/2020/03/12/hello-world/" data-id="ck7rpgscj000025u74c7o91bn" class="article-share-link">Share</a>
       
       
     </footer>
