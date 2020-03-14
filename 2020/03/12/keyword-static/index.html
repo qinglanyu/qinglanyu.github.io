@@ -10,17 +10,16 @@
   <meta name="description" content="在一个阳光明媚休假的周末，一个static引发了一场就惊天动地的惨案…… 案情回顾周末在家接到同事电话说跑在Vx下的程序刚启动不久就导致操作系统重启。明明周五下班前自己是调试过没有问题的。周一一大早来到联试现场，启动程序，的确不到一分钟操作系统就自己重启了。反复试验数次，均复现。既然能复现就好办了。找到上周五提交的代码，简单分析后初步怀疑是一个RapidIO接收回调函数导致系统重启了。 案情还">
 <meta property="og:type" content="article">
 <meta property="og:title" content="一个static引发的惨案">
-<meta property="og:url" content="http://qinglanyu.github.io/2020/03/12/keyword-static/keyword-static/index.html">
+<meta property="og:url" content="http://qinglanyu.github.io/2020/03/12/keyword-static/index.html">
 <meta property="og:site_name" content="Ergozee&#39;s Blog">
 <meta property="og:description" content="在一个阳光明媚休假的周末，一个static引发了一场就惊天动地的惨案…… 案情回顾周末在家接到同事电话说跑在Vx下的程序刚启动不久就导致操作系统重启。明明周五下班前自己是调试过没有问题的。周一一大早来到联试现场，启动程序，的确不到一分钟操作系统就自己重启了。反复试验数次，均复现。既然能复现就好办了。找到上周五提交的代码，简单分析后初步怀疑是一个RapidIO接收回调函数导致系统重启了。 案情还">
 <meta property="og:locale" content="en_US">
-<meta property="og:image" content="http://qinglanyu.github.io/2020/03/12/keyword-static/keyword-static/girl.jpg">
-<meta property="og:image" content="http://qinglanyu.github.io/2020/03/12/keyword-static/keyword-static/NoBlockingRoutines.jpg">
-<meta property="og:image" content="http://qinglanyu.github.io/2020/03/12/keyword-static/keyword-static/C++CodeLimitations.jpg">
-<meta property="og:image" content="http://qinglanyu.github.io/2020/03/12/keyword-static/keyword-static/NoBlockingRoutines.jpg">
-<meta property="og:image" content="http://qinglanyu.github.io/2020/03/12/keyword-static/keyword-static/C++CodeLimitations.jpg">
+<meta property="og:image" content="http://qinglanyu.github.io/2020/03/12/keyword-static/NoBlockingRoutines.png">
+<meta property="og:image" content="http://qinglanyu.github.io/2020/03/12/keyword-static/C++CodeLimitations.png">
+<meta property="og:image" content="http://qinglanyu.github.io/2020/03/12/keyword-static/NoBlockingRoutines.jpg">
+<meta property="og:image" content="http://qinglanyu.github.io/2020/03/12/keyword-static/C++CodeLimitations.jpg">
 <meta property="article:published_time" content="2020-03-12T12:14:19.000Z">
-<meta property="article:modified_time" content="2020-03-14T14:12:27.242Z">
+<meta property="article:modified_time" content="2020-03-14T15:27:45.499Z">
 <meta property="article:author" content="Jun">
 <meta property="article:tag" content="Coder">
 <meta property="article:tag" content=" C&#x2F;C++">
@@ -28,7 +27,7 @@
 <meta property="article:tag" content=" Matlab">
 <meta property="article:tag" content=" Python">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://qinglanyu.github.io/2020/03/12/keyword-static/keyword-static/girl.jpg">
+<meta name="twitter:image" content="http://qinglanyu.github.io/2020/03/12/keyword-static/NoBlockingRoutines.png">
   
     <link rel="alternate" href="/atom.xml" title="Ergozee&#39;s Blog" type="application/atom+xml">
   
@@ -81,9 +80,9 @@
   </div>
 </header>
       <div class="outer">
-        <section id="main"><article id="post-keyword-static/keyword-static" class="article article-type-post" itemscope itemprop="blogPost">
+        <section id="main"><article id="post-keyword-static" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/2020/03/12/keyword-static/keyword-static/" class="article-date">
+    <a href="/2020/03/12/keyword-static/" class="article-date">
   <time datetime="2020-03-12T12:14:19.000Z" itemprop="datePublished">2020-03-12</time>
 </a>
     
@@ -112,13 +111,18 @@
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">void rioRcvHandler(void)</span><br><span class="line">&#123;</span><br><span class="line">    static int freq &#x3D; sysClkRateGet();</span><br><span class="line">    static int now &#x3D; tickGet();</span><br><span class="line">    int d &#x3D; tickGet() - now;</span><br><span class="line">    now +&#x3D; d;</span><br><span class="line"></span><br><span class="line">    logMsg((char*)&quot;%s recv data(d&#x3D;%dticks&#x3D;%dms, now&#x3D;%dticks.)\n&quot;, \</span><br><span class="line">        (int)__FUNCTION__, d, d*1000&#x2F;freq, now);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>因为调试过程中发现该函数经常在同一个tick时刻连续收到完全相同的两包数据，故加上了以上代码检测函数被调用频率。 sysClkRateGet只调用一次计算系统时钟频率。前后两次tickGet()的差值换算成时间单位ms。给静态变量赋一次初值，这是C++程序很常用的语法，编译通过，上周五也能正常运行。为何过了一晚上就会莫名造成系统重启。后经排查发现程序运行的目标板由A厂家的PPC换成B厂家的PPC。也就是说其实应用程序本身没有问题，而是目标板也就是系统驱动造成的？可为何将以上打时间stamp的语句注释掉后问题就消失了？</p>
 <p>经过咨询B厂家的驱动开发负责人，了解到A厂家的驱动是在task context中调用的应用程序回调函数，而B厂家的驱动则是在interrupt context中调用应用程序回调函数。这样问题就简单一些了。也就是说本应用中的回调函数在中断服务上下文中会造成系统重启。换句话说以上代码在中断上下文中不符合规范。</p>
-<p>后来翻阅VxWorks的手册，关于编写中断服务函数及中断服务函数的限制，有这么一段：<br><img src="/2020/03/12/keyword-static/keyword-static/girl.jpg" alt></p>
- 
+<p>后来翻阅VxWorks的手册，关于编写中断服务函数及中断服务函数的限制，有这么一段：</p>
+<!-- ![](girl.jpg) -->
 
+<!-- <img src="/2020/03/12/keyword-static/NoBlockingRoutines.png" class="" title="非阻塞函数">  -->
+<!-- <img src="/2020/03/12/keyword-static/C++CodeLimitations.png" class="" title="C++代码限制"> -->
 
-<p><img src="/2020/03/12/keyword-static/keyword-static/NoBlockingRoutines.jpg" alt><br><img src="/2020/03/12/keyword-static/keyword-static/C++CodeLimitations.jpg" alt></p>
-<img src="/2020/03/12/keyword-static/keyword-static/NoBlockingRoutines.jpg">
-<img src="/2020/03/12/keyword-static/keyword-static/C++CodeLimitations.jpg">
+<!-- this is a good example below.-->
+<!-- ![](NoBlockingRoutines.jpg) -->
+<!-- ![](C++CodeLimitations.jpg) -->
+
+<img src="/2020/03/12/keyword-static/NoBlockingRoutines.jpg">
+<img src="/2020/03/12/keyword-static/C++CodeLimitations.jpg">
 
 
 <p>也就是说，由于VxWorks的中断服务程序并不在任务上下文环境运行，即所有中断服务函数共享一个stack空间，因此中断服务函数的一个基本限制就是其不能调用可能导致中断函数阻塞的函数。例如，不能在ISRs中take信号量。</p>
@@ -146,7 +150,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://qinglanyu.github.io/2020/03/12/keyword-static/keyword-static/" data-id="ck7rqzm7g0001gxu70uuldb3o" class="article-share-link">Share</a>
+      <a data-url="http://qinglanyu.github.io/2020/03/12/keyword-static/" data-id="ck7rri46e0000z0u7czyv3yqn" class="article-share-link">Share</a>
       
       
     </footer>
@@ -208,7 +212,7 @@
           </li>
         
           <li>
-            <a href="/2020/03/12/keyword-static/keyword-static/">一个static引发的惨案</a>
+            <a href="/2020/03/12/keyword-static/">一个static引发的惨案</a>
           </li>
         
           <li>
