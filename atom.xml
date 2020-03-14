@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://qinglanyu.github.io/"/>
-  <updated>2020-03-14T15:22:32.644Z</updated>
+  <updated>2020-03-14T15:41:08.672Z</updated>
   <id>http://qinglanyu.github.io/</id>
   
   <author>
@@ -21,15 +21,15 @@
     <link href="http://qinglanyu.github.io/2020/03/14/Writing-Test/"/>
     <id>http://qinglanyu.github.io/2020/03/14/Writing-Test/</id>
     <published>2020-03-14T15:20:03.000Z</published>
-    <updated>2020-03-14T15:22:32.644Z</updated>
+    <updated>2020-03-14T15:41:08.672Z</updated>
     
-    <content type="html"><![CDATA[<p>First, I want to insert a picture in this blog.<br><img src="/2020/03/14/Writing-Test/girl.jpg" alt></p>]]></content>
+    <content type="html"><![CDATA[<p>First, I want to insert a picture in this blog.<br><img src="/2020/03/14/Writing-Test/girl.jpg"></p>]]></content>
     
     <summary type="html">
     
       
       
-        &lt;p&gt;First, I want to insert a picture in this blog.&lt;br&gt;&lt;img src=&quot;/2020/03/14/Writing-Test/girl.jpg&quot; alt&gt;&lt;/p&gt;
+        &lt;p&gt;First, I want to insert a picture in this blog.&lt;br&gt;&lt;img src=&quot;/2020/03/14/Writing-Test/girl.jpg&quot;&gt;&lt;/p&gt;
 
       
     
