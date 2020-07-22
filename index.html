@@ -75,6 +75,51 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-最长不重复子串Longest-Substring-Without-Repeated-Characters算法优化" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2020/07/22/%E6%9C%80%E9%95%BF%E4%B8%8D%E9%87%8D%E5%A4%8D%E5%AD%90%E4%B8%B2Longest-Substring-Without-Repeated-Characters%E7%AE%97%E6%B3%95%E4%BC%98%E5%8C%96/" class="article-date">
+  <time datetime="2020-07-22T14:59:56.000Z" itemprop="datePublished">2020-07-22</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2020/07/22/%E6%9C%80%E9%95%BF%E4%B8%8D%E9%87%8D%E5%A4%8D%E5%AD%90%E4%B8%B2Longest-Substring-Without-Repeated-Characters%E7%AE%97%E6%B3%95%E4%BC%98%E5%8C%96/">最长不重复子串Longest Substring Without Repeated Characters算法优化</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>Given a string, find the length of the <strong>longest substring</strong> without repeating characters.</p>
+<h3 id="Example-1"><a href="#Example-1" class="headerlink" title="Example 1:"></a>Example 1:</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Input: &quot;abcabcbb&quot;</span><br><span class="line">Output: 3</span><br><span class="line">Explanation: The answer is &quot;abc&quot;, with the length of 3.</span><br></pre></td></tr></table></figure>
+<h3 id="Example-2"><a href="#Example-2" class="headerlink" title="Example 2:"></a>Example 2:</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Input: &quot;bbbbb&quot;</span><br><span class="line">Output: 1</span><br><span class="line">Explanation: The answer is &quot;b&quot;, with the length of 1.</span><br></pre></td></tr></table></figure>
+<h3 id="Example-3"><a href="#Example-3" class="headerlink" title="Example 3:"></a>Example 3:</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Input: &quot;pwwkew&quot;</span><br><span class="line">Output: 3</span><br><span class="line">Explanation: The answer is &quot;wke&quot;, with the length of 3. </span><br><span class="line">     Note that the answer must be a substring, &quot;pwke&quot; is a subsequence and not a substring.</span><br></pre></td></tr></table></figure>
+
+<h3 id="Solution-1-滑动窗口法"><a href="#Solution-1-滑动窗口法" class="headerlink" title="Solution 1 滑动窗口法"></a>Solution 1 滑动窗口法</h3><p>窗口左指针i，右指针j=i+1；右指针依次从字符串左侧到最右侧滑动。只要指针j指向的字符在窗口内(k)，则移动左指针到重复元素k的右侧(k+1)；否则移动右指针，增加窗口长度。窗口右指针滑动至字符串最右侧时，经过的最大窗口宽度即为最大不重复子串的长度。</p>
+<h4 id="code"><a href="#code" class="headerlink" title="code"></a>code</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">class Solution &#123;</span><br><span class="line">#define MAX(a, b) ((a)&gt;(b)?(a):(b))</span><br><span class="line">public:</span><br><span class="line">	int lengthOfLongestSubstring(string s) &#123;</span><br><span class="line">		int m &#x3D; 0;</span><br><span class="line">		if (s.length() &#x3D;&#x3D; 0) return m;</span><br><span class="line">		if (s.length() &gt; 0) m &#x3D; 1;</span><br><span class="line">		for (unsigned i &#x3D; 0, j &#x3D; i + 1; j &lt; s.length(); ++j) &#123;</span><br><span class="line">			unsigned k &#x3D; i;</span><br><span class="line">			for (; k &lt; j; ++k) &#123;</span><br><span class="line">				if (s[k] &#x3D;&#x3D; s[j]) &#123;</span><br><span class="line">					i &#x3D; k + 1;</span><br><span class="line">					break;</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">			if (k &#x3D;&#x3D; j)	&#123;</span><br><span class="line">				m &#x3D; MAX(m, j - i + 1);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		return m;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>执行结果：通过<br>执行用时： 8ms，在所有C++提交中击败了94.40%的用户<br>内存消耗： 7MB，在所有C++提交中击败了100.00%的用户</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://qinglanyu.github.io/2020/07/22/%E6%9C%80%E9%95%BF%E4%B8%8D%E9%87%8D%E5%A4%8D%E5%AD%90%E4%B8%B2Longest-Substring-Without-Repeated-Characters%E7%AE%97%E6%B3%95%E4%BC%98%E5%8C%96/" data-id="ckcxhwc8y0000piu77reb8rvn" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-Writing-Test" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2020/03/14/Writing-Test/" class="article-date">
@@ -102,7 +147,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://qinglanyu.github.io/2020/03/14/Writing-Test/" data-id="ck7rredq60000rbu7egf8e5e9" class="article-share-link">Share</a>
+      <a data-url="http://qinglanyu.github.io/2020/03/14/Writing-Test/" data-id="ck7xfedz70000c3u7f0tnb82i" class="article-share-link">Share</a>
       
       
     </footer>
@@ -182,7 +227,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://qinglanyu.github.io/2020/03/12/keyword-static/" data-id="ck7rri46e0000z0u7czyv3yqn" class="article-share-link">Share</a>
+      <a data-url="http://qinglanyu.github.io/2020/03/12/keyword-static/" data-id="ck7xfedzn0002c3u72ad89qqc" class="article-share-link">Share</a>
       
       
     </footer>
@@ -231,7 +276,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://qinglanyu.github.io/2020/03/12/hello-world/" data-id="ck7rqzm5z0000gxu7a8ro7fk8" class="article-share-link">Share</a>
+      <a data-url="http://qinglanyu.github.io/2020/03/12/hello-world/" data-id="ck7xfedzj0001c3u79xoq5rzg" class="article-share-link">Share</a>
       
       
     </footer>
@@ -259,7 +304,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/03/">March 2020</a></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/07/">July 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/03/">March 2020</a></li></ul>
     </div>
   </div>
 
@@ -270,6 +315,10 @@
     <h3 class="widget-title">Recent Posts</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/2020/07/22/%E6%9C%80%E9%95%BF%E4%B8%8D%E9%87%8D%E5%A4%8D%E5%AD%90%E4%B8%B2Longest-Substring-Without-Repeated-Characters%E7%AE%97%E6%B3%95%E4%BC%98%E5%8C%96/">最长不重复子串Longest Substring Without Repeated Characters算法优化</a>
+          </li>
         
           <li>
             <a href="/2020/03/14/Writing-Test/">Writing Test</a>
